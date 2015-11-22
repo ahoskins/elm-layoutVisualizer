@@ -1,5 +1,5 @@
-import Visualize exposing (update, view)
+import Visualize exposing (update, view, init)
 import StartApp.Simple exposing (start)
 
 main =
-    start {model = [], update = update, view = view}
+    start {model = init, update = update, view = view}
