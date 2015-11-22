@@ -46,14 +46,10 @@ view address model =
 -- return a single div with a border
 makeElement : Signal.Address Action -> (Position, Display) -> Html
 makeElement address (pos, disp) =
-    div [countStyle] [text "hello"]
-
-countStyle : Attribute
-countStyle =
-  style
-    [ ("font-size", "20px")
-    , ("font-family", "monospace")
-    , ("text-align", "center")
-    , ("border", "2px solid black")
-    ]
+    let l : List (String, String)
+        l = [("border", "2px solid black"), 
+            ("position", toString pos), 
+            ("display", toString disp)]
+    in
+        div [style l] [text "hello"]
 
