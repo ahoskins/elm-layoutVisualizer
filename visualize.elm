@@ -5,7 +5,7 @@ import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
 import List
 
--- MODEL
+------------- MODEL ---------------
 
 type Position = Static | Relative | Fixed | Absolute
 type Display = Inline | Block
@@ -25,22 +25,20 @@ init =
         disp = Block
     }
 
-
-
--- UPDATE
+------------- UPDATE ------------------
 
 type Action = Insert | Remove | ToAbsolute | ToStatic | ToFixed | ToRelative | ToBlock | ToInline
 
 update : Action -> Model -> Model
 update action model =
     case action of
-        -- append to model
+        -- add element
         Insert -> 
             { model |
                 list = List.append model.list [(model.pos, model.disp)]
             }
 
-        -- remove the last element from the model
+        -- remove last element
         Remove -> 
             { model | 
                 list = List.take (List.length model.list - 1) model.list
@@ -76,20 +74,15 @@ update action model =
                 disp = Inline
             }
 
-
--- VIEW
-
+-------------- VIEW ----------------
 
 view : Signal.Address Action -> Model -> Html
 view address model =
-    -- make a div for each in model
     let els : List Html
         els = List.map (makeElement address) model.list
 
-        removeButton :  Html
         removeButton = button [ onClick address Remove ] [ text "Remove" ]
 
-        insertButton : Html
         insertButton = button [ onClick address Insert ] [ text "Add" ]
 
         posAbsolute = button [ onClick address ToAbsolute ] [text "Absolute"]
@@ -109,6 +102,8 @@ view address model =
                 [currentDisp, currentPos] ++
                 els)
 
+-- un-used, returns a tuple with a color if matching model
+-- figure out how to style buttons then I can use it
 styleIt : String -> String-> List (String, String)
 styleIt modelPos pos = 
     if pos == modelPos then
