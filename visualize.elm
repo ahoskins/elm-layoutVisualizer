@@ -2,32 +2,41 @@ module Visualize where
 
 import Html exposing (..)
 import Html.Attributes exposing (style)
-import Html.Events exposing (onClick)
+import Html.Events exposing (onClick, on)
 import List
+import Json.Decode as Json
 
 ------------- MODEL ---------------
 
-type Position = Static | Relative | Fixed | Absolute
-type Display = Inline | Block
+type Position = Static
+                | Fixed 
 
--- list of objects
+type Display = Inline
+                | Block
+
+-- list of elements, and store the next elements position and display
 type alias Model = {
     list: List (Position, Display),
-    pos: Position,
-    disp: Display
+    position: Position,
+    display: Display
 }
 
 init : Model
 init = 
     {
         list =  [],
-        pos =  Static,
-        disp = Block
+        position =  Static,
+        display = Block
     }
 
 ------------- UPDATE ------------------
 
-type Action = Insert | Remove | ToAbsolute | ToStatic | ToFixed | ToRelative | ToBlock | ToInline
+type Action = Insert
+            | Remove
+            | ToStatic
+            | ToFixed
+            | ToBlock 
+            | ToInline
 
 update : Action -> Model -> Model
 update action model =
@@ -35,7 +44,7 @@ update action model =
         -- add element
         Insert -> 
             { model |
-                list = List.append model.list [(model.pos, model.disp)]
+                list = List.append model.list [(model.position, model.display)]
             }
 
         -- remove last element
@@ -44,80 +53,79 @@ update action model =
                 list = List.take (List.length model.list - 1) model.list
             }
 
-        ToAbsolute ->
-            { model | 
-                pos = Absolute
-            }
-
         ToStatic ->
             { model | 
-                pos = Static
+                position = Static
             }
 
         ToFixed ->
             { model | 
-                pos = Fixed
-            }
-
-        ToRelative ->
-            { model | 
-                pos = Relative
+                position = Fixed
             }
 
         ToBlock ->
              { model | 
-                disp = Block
+                display = Block
             }
 
         ToInline ->
              { model | 
-                disp = Inline
+                display = Inline
             }
 
 -------------- VIEW ----------------
 
 view : Signal.Address Action -> Model -> Html
 view address model =
+    -- optional type annotation...definition must follow optional annotation
     let els : List Html
-        els = List.map (makeElement address) model.list
-
-        removeButton = button [ onClick address Remove ] [ text "Remove" ]
-
-        insertButton = button [ onClick address Insert ] [ text "Add" ]
-
-        posAbsolute = button [ onClick address ToAbsolute ] [text "Absolute"]
-        posStatic = button [ onClick address ToStatic ] [text "Static"] 
-        posFixed = button [ onClick address ToFixed ] [text "Fixed"] 
-        posRelative = button [ onClick address ToRelative ] [text "Relative"]
-
-        dispBlock = button [ onClick address ToBlock ] [text "Block"] 
-        dispInline = button [ onClick address ToInline ] [text "Inline"]
-
-        currentPos = div [] [text ("Next Position: " ++ toString model.pos)]
-        currentDisp = div [] [text ("Next Display: " ++ toString model.disp)]
+        els = List.map makeElement model.list
+        remove = button [clicker address Remove]
+                        [text "Remove"]
+        insert = button [clicker address Insert,
+                        style [("margin-right", "25px")]] 
+                        [text "Add"]
+        static = button [clicker address ToStatic, 
+                        style (styleIt (toString model.position) "Static")]
+                        [text "Static"] 
+        fixed = button [clicker address ToFixed, 
+                       style (styleIt (toString model.position) "Fixed"),
+                       style [("margin-right", "25px")]]
+                       [text "Fixed"] 
+        block = button [clicker address ToBlock,
+                       style (styleIt (toString model.display) "Block")]
+                       [text "Block"] 
+        inline = button [clicker address ToInline, 
+                        style (styleIt (toString model.display) "Inline")]
+                        [text "Inline"]
     in
-        div [] ([removeButton, insertButton] ++
-                [posAbsolute, posStatic, posFixed, posRelative] ++
-                [dispBlock, dispInline] ++
-                [currentDisp, currentPos] ++
+        div [] ([remove, insert] ++
+                [static, fixed] ++
+                [block, inline] ++
                 els)
 
--- un-used, returns a tuple with a color if matching model
--- figure out how to style buttons then I can use it
-styleIt : String -> String-> List (String, String)
-styleIt modelPos pos = 
-    if pos == modelPos then
+-- custom clicker event handler, not needed there's a built-in onClick
+clicker : Signal.Address Action -> Action -> Attribute
+clicker address action =
+    on "click" Json.value (\_ -> Signal.message address action)
+
+-- color the active button green
+styleIt : String -> String -> List (String, String)
+styleIt modelPos position = 
+    if position == modelPos then
         List.append [] [("background-color", "lightgreen")]
     else
         []
 
--- return a single div with a border
-makeElement : Signal.Address Action -> (Position, Display) -> Html
-makeElement address (pos, disp) =
+-- make a single div with a border
+makeElement : (Position, Display) -> Html
+makeElement (position, display) =
+    -- everything is an expression, so when declaring a variable
+    -- it needs to know the expression is found in the "in" block
     let l : List (String, String)
         l = [("border", "2px solid black"), 
-            ("position", toString pos), 
-            ("display", toString disp)]
+            ("position", toString position), 
+            ("display", toString display)]
     in
-        div [style l] [text "hello"]
+        div [style l] [text "Hello Elm"]
 
